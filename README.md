@@ -6,6 +6,8 @@ Starting a Noctalia v5 plugin means rebuilding a Luau test harness and finding c
 
 The bar shows a glyph and the configurable `scaffold` label. Clicking opens an attached panel with `Hello World!` and a translated subtitle. Vertical bars show only the glyph. A blank label falls back to the default.
 
+![Example bar widget and attached Hello World panel](screenshots/panel.png)
+
 ## Start a plugin
 
 Requires Bash, Git, GNU tar, GNU sed and the `luau` CLI on PATH.
