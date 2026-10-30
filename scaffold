@@ -41,7 +41,71 @@ cmd_sync() {
   echo "synced harness into $repo"
 }
 
+# Files whose plugin identity is rewritten in a new plugin. Docs keep "scaffold"
+# because they talk about this template and its script.
+
+
+title_case() {
+  sed -E 's/(^|-)([a-z])/\1\u\2/g; s/-/ /g' <<<"$1"
+}
+
+cmd_new() {
+  local name="" parent author="nandomoreirame"
+  parent="$(dirname "$TEMPLATE")"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --dir) parent="${2:?--dir needs a path}"; shift 2 ;;
+      --author) author="${2:?--author needs an id prefix}"; shift 2 ;;
+      -*) usage; exit 2 ;;
+      *) [ -z "$name" ] || { usage; exit 2; }; name="$1"; shift ;;
+    esac
+  done
+  [[ "$name" =~ ^[a-z][a-z0-9]*(-[a-z0-9]+)*$ ]] || die "name must be kebab-case: '$name'"
+  [[ "$author" =~ ^[A-Za-z0-9_-]+$ ]] || die "invalid author: '$author'"
+  local dst="$parent/$name"
+  [ ! -e "$dst" ] || die "$dst already exists"
+
+  local resolved_parent
+  mkdir -p "$parent"
+  resolved_parent="$(cd "$parent" && pwd -P)"
+  case "$resolved_parent/" in "$TEMPLATE/"*) die "target must be outside the template" ;; esac
+  [ ! -L "$dst" ] || die "$dst already exists"
+
+  local title
+  title="$(title_case "$name")"
+  mkdir -p "$dst"
+  tar -C "$TEMPLATE" \
+    --exclude=./.git --exclude=./tests/.generated --exclude=./screenshots \
+    --exclude=./scaffold --exclude=./tests/scaffold.test.sh --exclude=./tests/docs.test.sh \
+    -cf - . | tar -C "$dst" -xf -
+  mv "$dst/docs/README.template.md" "$dst/README.md"
+
+  (
+    cd "$dst"
+    shopt -s nullglob
+    local f
+    for f in plugin.toml ./*.luau lib/*.luau tests/*.test.luau translations/*.json README.md; do
+      [ -f "$f" ] || continue
+      sed -i \
+        -e "s#nandomoreirame/scaffold#${author}/${name}#g" \
+        -e "s/\bScaffold\b/${title}/g" \
+        -e "s/\bscaffold\b/${name}/g" \
+        "$f"
+    done
+    git init -b main -q
+  )
+
+  cat <<EOF
+created $dst ($author/$name)
+next:
+  cd $dst && ./run-tests
+  edit plugin.toml (author, description, icon), lib/, widget.luau, panel.luau
+  noctalia-plugins-link   # or symlink it into ~/.local/share/noctalia/plugins/$name
+EOF
+}
+
 case "${1:-}" in
+  new) shift; cmd_new "$@" ;;
   sync) shift; cmd_sync "$@" ;;
   -h | --help) usage ;;
   *) usage; exit 2 ;;

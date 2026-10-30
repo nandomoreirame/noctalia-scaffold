@@ -37,5 +37,26 @@ check "sync appends the gitignore entry once" bash -c '[ "$(grep -cx "tests/.gen
 check "sync refuses a dir without plugin.toml" bash -c '! "$SCRIPT" sync "$T" >/dev/null 2>&1'
 check "unknown subcommand fails" bash -c '! "$SCRIPT" bogus >/dev/null 2>&1'
 
+# --- new ----------------------------------------------------------------
+"$SCRIPT" new disk-cleaner --dir "$T" --author someone >/dev/null
+N="$T/disk-cleaner"
+export N
+check "new creates the plugin dir" bash -c '[ -f "$N/plugin.toml" ]'
+check "new rewrites the id" bash -c 'grep -qF "id = \"someone/disk-cleaner\"" "$N/plugin.toml"'
+check "new title-cases the name" bash -c 'grep -qF "name = \"Disk Cleaner\"" "$N/plugin.toml"'
+check "new rewrites the default label" bash -c 'grep -qF "default = \"disk-cleaner\"" "$N/plugin.toml"'
+check "new rewrites the panel id" bash -c 'grep -qF "someone/disk-cleaner:panel" "$N/widget.luau"'
+check "new leaves no scaffold id behind" bash -c '! grep -rqF "nandomoreirame/scaffold" "$N" --exclude-dir=.git'
+check "new drops the script and template-only tests" bash -c '[ ! -e "$N/scaffold" ] && [ ! -e "$N/tests/scaffold.test.sh" ] && [ ! -e "$N/tests/docs.test.sh" ]'
+check "new uses the README template" bash -c 'head -1 "$N/README.md" | grep -qF "Disk Cleaner"'
+check "new removes the README template" bash -c '[ ! -e "$N/docs/README.template.md" ]'
+check "new skips generated files" bash -c '[ ! -e "$N/tests/.generated" ]'
+check "new starts a fresh git repo on main" bash -c '[ "$(git -C "$N" symbolic-ref --short HEAD)" = main ] && [ -z "$(git -C "$N" log --oneline 2>/dev/null)" ]'
+check "new plugin passes its own tests" bash -c '(cd "$N" && ./run-tests >/dev/null 2>&1)'
+check "new refuses an existing target" bash -c '! "$SCRIPT" new disk-cleaner --dir "$T" >/dev/null 2>&1'
+check "new refuses a non-kebab name" bash -c '! "$SCRIPT" new Bad_Name --dir "$T" >/dev/null 2>&1'
+"$SCRIPT" new plain --dir "$T" >/dev/null
+check "new defaults the author" bash -c 'grep -qF "id = \"nandomoreirame/plain\"" "$T/plain/plugin.toml"'
+
 echo "scaffold.test.sh: $passed passed, $failed failed"
 [ "$failed" -eq 0 ]
