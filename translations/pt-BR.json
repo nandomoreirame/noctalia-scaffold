@@ -1,0 +1,10 @@
+{
+  "bar": { "tooltip": "Scaffold: clique para abrir o painel de exemplo" },
+  "panel": { "subtitle": "Edite panel.luau para começar o seu plugin" },
+  "settings": {
+    "label": {
+      "label": "Texto na barra",
+      "description": "Texto ao lado do ícone na barra. Vazio volta para \"scaffold\"."
+    }
+  }
+}

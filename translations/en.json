@@ -1,0 +1,10 @@
+{
+  "bar": { "tooltip": "Scaffold: click to open the example panel" },
+  "panel": { "subtitle": "Edit panel.luau to start your plugin" },
+  "settings": {
+    "label": {
+      "label": "Bar label",
+      "description": "Text shown next to the icon in the bar. Empty falls back to \"scaffold\"."
+    }
+  }
+}
