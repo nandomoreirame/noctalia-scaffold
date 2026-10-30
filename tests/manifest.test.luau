@@ -49,3 +49,13 @@ describe("plugin.toml", function()
 		assert.equal(description ~= nil and utf8.len(description) <= 120, true)
 	end)
 end)
+
+describe("lib purity", function()
+	it("lib modules never touch host globals", function()
+		local source = string.gsub(modules.text("lib/present.luau"), "%-%-[^\n]*", "")
+		source = string.gsub(source, '"[^"\n]*"', '""')
+		for _, global in { "noctalia%.", "barWidget%.", "panel%.", "ui%." } do
+			assert.equal(string.find(source, "%f[%w_]" .. global) == nil, true)
+		end
+	end)
+end)
