@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# scaffold - start or refresh a Noctalia v5 plugin from this template.
+#
+# Usage:
+#   ./scaffold new <name> [--dir <parent>] [--author <id-prefix>]
+#   ./scaffold sync <plugin-repo>
+#
+# new   Copies this repo to <parent>/<name> as a fresh plugin "<author>/<name>".
+# sync  Refreshes tests/support/, run-tests and .github/workflows/ci.yml in an
+#       existing plugin. Never touches plugin.toml, lib/, root *.luau or tests.
+set -euo pipefail
+
+TEMPLATE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GITIGNORE_ENTRY="tests/.generated/"
+
+die() {
+  echo "scaffold: $*" >&2
+  exit 1
+}
+
+usage() {
+  sed -n '3,6p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2
+}
+
+ensure_gitignore() {
+  local file="$1/.gitignore"
+  touch "$file"
+  grep -qxF "$GITIGNORE_ENTRY" "$file" || printf '%s\n' "$GITIGNORE_ENTRY" >>"$file"
+}
+
+cmd_sync() {
+  [ $# -eq 1 ] || { usage; exit 2; }
+  local repo="$1"
+  [ -f "$repo/plugin.toml" ] || die "$repo has no plugin.toml"
+  mkdir -p "$repo/tests/support" "$repo/.github/workflows"
+  find "$repo/tests/support" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  cp -a "$TEMPLATE/tests/support/." "$repo/tests/support/"
+  cp -a "$TEMPLATE/run-tests" "$repo/run-tests"
+  cp -a "$TEMPLATE/.github/workflows/ci.yml" "$repo/.github/workflows/ci.yml"
+  ensure_gitignore "$repo"
+  echo "synced harness into $repo"
+}
+
+case "${1:-}" in
+  sync) shift; cmd_sync "$@" ;;
+  -h | --help) usage ;;
+  *) usage; exit 2 ;;
+esac
