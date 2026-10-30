@@ -14,18 +14,21 @@ Read settings, call a pure model and render its result. Keep click handlers as t
 
 ## Manifest
 
-Use `<author>/<directory>` as the id, API 22, a version, license and a description of at most 120 characters. Declare every widget, panel and setting. Tests check these fields so metadata cannot silently drift.
+Use `<author>/<directory>` as the id, where `<author>` is your machine user name (`whoami`, the default of `./scaffold new`), API 22, a version, license and a description of at most 120 characters. Declare every widget, panel and setting. Tests check these fields so metadata cannot silently drift.
 
 ## Panels
 
 Declare `placement = "attached"` and `open_near_click = true`. Use a column with centered alignment, justification and available-height growth for the headline and subtitle. Verify layout in the real host because mocks cannot prove centering. `ui.box` does not host children.
 
-Users can override placement in `plugins.toml`:
+An attached panel has no surface of its own: it inherits the bar's `background_opacity`, so on a translucent bar the wallpaper shows through and text loses contrast. Users with a translucent bar float it in `plugins.toml` (replace `<whoami>` with the output of `whoami`, `my-plugin` with the plugin directory):
 
 ```toml
-[plugin_settings."author/plugin"]
+[plugin_settings."<whoami>/my-plugin"]
 panel_placement = "floating"
+panel_open_near_click = true
 ```
+
+A floating panel gets the solid surface and border from `[shell.panel]` in `config.toml` (`transparency_mode = "solid"`).
 
 Placement and border changes require a shell restart.
 

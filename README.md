@@ -4,7 +4,7 @@ Starting a Noctalia v5 plugin means rebuilding a Luau test harness and finding c
 
 ## Try the example
 
-The bar shows a glyph and the configurable `scaffold` label. Clicking opens an attached panel with `Hello World!` and a translated subtitle. Vertical bars show only the glyph. A blank label falls back to the default.
+The bar shows a glyph and the configurable `scaffold` label. Clicking opens a dropdown panel with `Hello World!` and a translated subtitle. Vertical bars show only the glyph. A blank label falls back to the default.
 
 ![Example bar widget and attached Hello World panel](screenshots/panel.png)
 
@@ -13,10 +13,12 @@ The bar shows a glyph and the configurable `scaffold` label. Clicking opens an a
 Requires Bash, Git, GNU tar, GNU sed and the `luau` CLI on PATH.
 
 ```bash
-./scaffold new my-plugin --dir .. --author you
+./scaffold new my-plugin --dir ..
 cd ../my-plugin
 ./run-tests
 ```
+
+The new plugin id is `$(whoami)/my-plugin`: the author prefix defaults to your machine user name (`whoami`). Pass `--author <github-user>` when your published id should differ.
 
 On GitHub, choose **Use this template**, clone the result, then run `./scaffold new` to apply a new identity. A GitHub template copy alone keeps the example identity.
 
@@ -30,17 +32,22 @@ This replaces `tests/support/`, `run-tests` and the CI workflow while preserving
 
 ## Install locally
 
+From a plugin created with `./scaffold new my-plugin`:
+
 ```bash
 mkdir -p ~/.local/share/noctalia/plugins
-ln -s "$PWD" ~/.local/share/noctalia/plugins/scaffold
+ln -s "$PWD" ~/.local/share/noctalia/plugins/my-plugin
+echo "$(whoami)/my-plugin"   # the id to use below
 ```
 
-Add `nandomoreirame/scaffold` to `[plugins] enabled` in `plugins.toml`. In `bar.toml`, add `scaffold` to a bar slot and define:
+Add that id to `[plugins] enabled` in `plugins.toml`. In `bar.toml`, add `my-plugin` to a bar slot and define (replace `<whoami>` with the output above):
 
 ```toml
-[widget.scaffold]
-type = "nandomoreirame/scaffold:bar"
+[widget.my-plugin]
+type = "<whoami>/my-plugin:bar"
 ```
+
+If the panel looks see-through, your bar is translucent: attached panels inherit its opacity. Float it instead (see [Panels](docs/STYLEGUIDE.md#panels)).
 
 Restart Noctalia. GUI settings may override entire enabled and bar-slot lists; check the effective configuration with `noctalia config export`.
 

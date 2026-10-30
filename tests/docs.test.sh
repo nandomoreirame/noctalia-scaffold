@@ -20,6 +20,13 @@ need docs/README.template.md "nandomoreirame/scaffold"
 need docs/README.template.md "## Security"
 need docs/README.template.md "./run-tests"
 
+for doc in README.md docs/STYLEGUIDE.md; do
+  if grep -n "nandomoreirame" "$ROOT/$doc"; then
+    echo "FAIL: $doc hardcodes the template author; use \$(whoami)" >&2; failed=1
+  fi
+done
+need README.md "whoami"
+need docs/STYLEGUIDE.md "whoami"
 if grep -rnE '/home/[a-z]+/' "$ROOT/README.md" "$ROOT/docs" "$ROOT/CLAUDE.md"; then
   echo "FAIL: absolute home path in docs" >&2; failed=1
 fi
