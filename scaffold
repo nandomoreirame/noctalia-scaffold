@@ -2,7 +2,7 @@
 # scaffold - start or refresh a Noctalia v5 plugin from this template.
 #
 # Usage:
-#   ./scaffold new <name> [--dir <parent>] [--author <id-prefix>]
+#   ./scaffold new <name> [--dir <parent>] [--author <id-prefix>]   (author defaults to whoami)
 #   ./scaffold sync <plugin-repo>
 #
 # new   Copies this repo to <parent>/<name> as a fresh plugin "<author>/<name>".
@@ -52,17 +52,15 @@ cmd_sync() {
   echo "synced harness into $repo"
 }
 
-# Files whose plugin identity is rewritten in a new plugin. Docs keep "scaffold"
-# because they talk about this template and its script.
-
-
 title_case() {
   sed -E 's/(^|-)([a-z])/\1\u\2/g; s/-/ /g' <<<"$1"
 }
 
 cmd_new() {
-  local name="" parent author="nandomoreirame"
+  local name="" parent author
   parent="$(dirname "$TEMPLATE")"
+  # Id prefix of the person running the script; characters an id cannot hold become "-".
+  author="$(whoami | tr -c 'A-Za-z0-9_\n-' '-')"
   while [ $# -gt 0 ]; do
     case "$1" in
       --dir) parent="${2:?--dir needs a path}"; shift 2 ;;
@@ -95,6 +93,8 @@ cmd_new() {
     cd "$dst"
     shopt -s nullglob
     local f
+    # Files whose plugin identity is rewritten. Docs keep "scaffold" because
+    # they talk about this template and its script.
     for f in plugin.toml ./*.luau lib/*.luau tests/*.test.luau translations/*.json README.md; do
       [ -f "$f" ] || continue
       sed -i \

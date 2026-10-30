@@ -56,7 +56,14 @@ check "new plugin passes its own tests" bash -c '(cd "$N" && ./run-tests >/dev/n
 check "new refuses an existing target" bash -c '! "$SCRIPT" new disk-cleaner --dir "$T" >/dev/null 2>&1'
 check "new refuses a non-kebab name" bash -c '! "$SCRIPT" new Bad_Name --dir "$T" >/dev/null 2>&1'
 "$SCRIPT" new plain --dir "$T" >/dev/null
-check "new defaults the author" bash -c 'grep -qF "id = \"nandomoreirame/plain\"" "$T/plain/plugin.toml"'
+check "new defaults the author to whoami" bash -c 'grep -qF "id = \"$(whoami)/plain\"" "$T/plain/plugin.toml"'
+FAKE="$T/fakebin"
+mkdir -p "$FAKE"
+printf '#!/bin/sh\necho first.last\n' > "$FAKE/whoami"
+chmod +x "$FAKE/whoami"
+export FAKE
+env -i HOME="$HOME" PATH="$FAKE:/usr/bin:/bin" bash "$SCRIPT" new dotted --dir "$T" >/dev/null
+check "new turns a whoami with dots into a valid id prefix" bash -c 'grep -qF "id = \"first-last/dotted\"" "$T/dotted/plugin.toml"'
 
 # Safety and byte-for-byte preservation.
 printf '# custom ignore block\nlocal-cache/' > "$R/.gitignore"
