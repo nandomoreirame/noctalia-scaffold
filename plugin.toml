@@ -1,0 +1,29 @@
+id = "nandomoreirame/scaffold"
+name = "Scaffold"
+version = "0.1.0"
+plugin_api = 22
+author = "Fernando Moreira Costa"
+license = "MIT"
+icon = "sparkles"
+description = "Hello World template for Noctalia v5 plugins: a bar label that opens a dropdown panel."
+tags = ["template", "example", "bar"]
+dependencies = []
+
+[[setting]]
+key = "label"
+type = "string"
+label_key = "settings.label.label"
+description_key = "settings.label.description"
+default = "scaffold"
+
+[[widget]]
+id = "bar"
+entry = "widget.luau"
+
+[[panel]]
+id = "panel"
+entry = "panel.luau"
+width = 320
+height = 160
+placement = "attached"
+open_near_click = true
