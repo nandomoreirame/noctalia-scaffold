@@ -58,5 +58,23 @@ check "new refuses a non-kebab name" bash -c '! "$SCRIPT" new Bad_Name --dir "$T
 "$SCRIPT" new plain --dir "$T" >/dev/null
 check "new defaults the author" bash -c 'grep -qF "id = \"nandomoreirame/plain\"" "$T/plain/plugin.toml"'
 
+# Safety and byte-for-byte preservation.
+printf '# custom ignore block\nlocal-cache/' > "$R/.gitignore"
+"$SCRIPT" sync "$R" >/dev/null
+check "sync preserves an unterminated custom ignore block" bash -c 'printf "# custom ignore block\nlocal-cache/\ntests/.generated/\n" | cmp -s - "$R/.gitignore"'
+cp "$R/.gitignore" "$T/ignore-before"
+"$SCRIPT" sync "$R" >/dev/null
+check "sync is byte-idempotent" cmp -s "$T/ignore-before" "$R/.gitignore"
+mkdir "$T/self"
+tar -C "$ROOT" --exclude=./.git --exclude=./tests/.generated -cf - . | tar -C "$T/self" -xf -
+check "sync refuses the template itself" bash -c '! "$T/self/scaffold" sync "$T/self" >/dev/null 2>&1'
+check "self sync preserves the source harness" cmp -s "$ROOT/tests/support/modules.luau" "$T/self/tests/support/modules.luau"
+mkdir -p "$T/external" "$T/linked"
+printf 'id = "x/linked"\n' > "$T/linked/plugin.toml"
+ln -s "$T/external" "$T/linked/tests"
+check "sync refuses symlinked harness paths" bash -c '! "$SCRIPT" sync "$T/linked" >/dev/null 2>&1'
+check "sync never writes through symlinks" bash -c '[ -z "$(ls -A "$T/external")" ]'
+check "new refuses a target nested inside the template" bash -c '! "$T/self/scaffold" new nested --dir "$T/self" >/dev/null 2>&1' 
+
 echo "scaffold.test.sh: $passed passed, $failed failed"
 [ "$failed" -eq 0 ]

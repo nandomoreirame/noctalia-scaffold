@@ -25,13 +25,24 @@ usage() {
 ensure_gitignore() {
   local file="$1/.gitignore"
   touch "$file"
-  grep -qxF "$GITIGNORE_ENTRY" "$file" || printf '%s\n' "$GITIGNORE_ENTRY" >>"$file"
+  if ! grep -qxF "$GITIGNORE_ENTRY" "$file"; then
+    if [ -s "$file" ] && [ -n "$(tail -c1 "$file")" ]; then
+      printf '\n' >>"$file"
+    fi
+    printf '%s\n' "$GITIGNORE_ENTRY" >>"$file"
+  fi
 }
 
 cmd_sync() {
   [ $# -eq 1 ] || { usage; exit 2; }
   local repo="$1"
   [ -f "$repo/plugin.toml" ] || die "$repo has no plugin.toml"
+  repo="$(cd "$repo" && pwd -P)"
+  [ "$repo" != "$TEMPLATE" ] || die "cannot sync the template itself"
+  local path
+  for path in tests tests/support .github .github/workflows run-tests .github/workflows/ci.yml .gitignore; do
+    [ ! -L "$repo/$path" ] || die "refusing symlinked harness path: $path"
+  done
   mkdir -p "$repo/tests/support" "$repo/.github/workflows"
   find "$repo/tests/support" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
   cp -a "$TEMPLATE/tests/support/." "$repo/tests/support/"
